@@ -1,60 +1,186 @@
-import React, { useState } from 'react'; 
-import { View, Text, TextInput, Pressable } from 'react-native';
-import "../global.css"; // Importa Tailwind configurado para React Native
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useAuth } from '../AuthContext';
 
-// Componente principal del login
-const LoginScreen = () => {
-  // Estados locales para almacenar el usuario y la contraseña
-  const [username, setUsername] = useState('');
+export default function LoginScreen() {
+  const [isLogin, setIsLogin] = useState(true); // true = login, false = register
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const { login, register } = useAuth();
+  const router = useRouter();
+
+  const handleLogin = () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Completa todos los campos');
+      return;
+    }
+    
+    if (login(email, password)) {
+      router.replace('/home');
+    } else {
+      Alert.alert('Error', 'Credenciales incorrectas');
+    }
+  };
+
+  const handleRegister = () => {
+    if (!name || !email || !password || !confirmPassword) {
+      Alert.alert('Error', 'Completa todos los campos');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Las contraseñas no coinciden');
+      return;
+    }
+
+    const result = register(name, email, password);
+    
+    if (result.success) {
+      Alert.alert('Éxito', '¡Cuenta creada! Ahora inicia sesión', [
+        { text: 'OK', onPress: () => {
+          setIsLogin(true);
+          setName('');
+          setEmail('');
+          setPassword('');
+          setConfirmPassword('');
+        }}
+      ]);
+    } else {
+      Alert.alert('Error', result.error || 'Error al registrar');
+    }
+  };
+
   return (
-    // Contenedor principal que centra todo el contenido en la pantalla
-    <View className="flex-1 justify-center items-center px-5">
-      
-      {/* Caja del formulario con fondo blanco semitransparente y sombra */}
-      <View className="bg-white/85 p-7 rounded-3xl w-11/12 max-w-md shadow-lg shadow-black/30">
+    <View className="absolute inset-0 justify-center items-center px-6">
+      <View className="w-full max-w-md bg-white/95 backdrop-blur rounded-3xl p-8 border-4 border-blue-400">
+        <Text className="text-4xl font-bold text-center text-gray-800 mb-6">
+          #NotFound
+        </Text>
         
-        {/* Título grande del formulario */}
-        <Text className="text-4xl font-extrabold text-center mb-8 text-blue-600 drop-shadow-md">
-          Bienvenido Mi Rey
-        </Text>
+        {/* Toggle Login/Register */}
+        <View className="flex-row gap-2 mb-6">
+          <TouchableOpacity
+            onPress={() => setIsLogin(true)}
+            className={`flex-1 py-3 rounded-xl ${
+              isLogin ? 'bg-blue-500' : 'bg-gray-200'
+            }`}
+          >
+            <Text className={`text-center font-bold ${
+              isLogin ? 'text-white' : 'text-gray-600'
+            }`}>
+              Login
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setIsLogin(false)}
+            className={`flex-1 py-3 rounded-xl ${
+              !isLogin ? 'bg-blue-500' : 'bg-gray-200'
+            }`}
+          >
+            <Text className={`text-center font-bold ${
+              !isLogin ? 'text-white' : 'text-gray-600'
+            }`}>
+              Register
+            </Text>
+          </TouchableOpacity>
+        </View>
 
-        {/* Campo de texto para el nombre de usuario */}
-        <TextInput
-          placeholder="Usuario"               // Texto que aparece cuando el campo está vacío
-          value={username}                    // Valor actual del campo (controlado por el estado)
-          onChangeText={setUsername}          // Función que actualiza el estado al escribir
-          className="border border-gray-300 p-3 mb-4 w-full rounded-xl bg-white/90"
-          placeholderTextColor="#555"         // Color del texto del placeholder
-        />
+        {isLogin ? (
+          // LOGIN FORM
+          <View>
+            <View className="mb-4">
+              <Text className="text-sm font-bold text-gray-700 mb-2">Email</Text>
+              <TextInput
+                value={email}
+                onChangeText={setEmail}
+                placeholder="tu@email.com"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                className="w-full px-4 py-3 bg-blue-50 rounded-xl border-2 border-blue-300"
+              />
+            </View>
 
-        {/* Campo de texto para la contraseña */}
-        <TextInput
-          placeholder="Contraseña"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry                     // Oculta el texto al escribir (modo contraseña)
-          className="border border-gray-300 p-3 mb-6 w-full rounded-xl bg-white/90"
-          placeholderTextColor="#555"
-        />
+            <View className="mb-6">
+              <Text className="text-sm font-bold text-gray-700 mb-2">Contraseña</Text>
+              <TextInput
+                value={password}
+                onChangeText={setPassword}
+                placeholder="••••••••"
+                secureTextEntry
+                className="w-full px-4 py-3 bg-blue-50 rounded-xl border-2 border-blue-300"
+              />
+            </View>
 
-        {/* Botón de ingresar */}
-        <Pressable
-          className="bg-gradient-to-r from-blue-500 to-indigo-600 p-3 rounded-xl items-center shadow-md active:opacity-80"
-          // Se puede agregar aquí una función onPress={() => ...} para manejar el login
-        >
-          <Text className="text-white font-bold text-lg">Ingresar</Text>
-        </Pressable>
+            <TouchableOpacity
+              onPress={handleLogin}
+              className="w-full bg-blue-500 py-4 rounded-xl"
+            >
+              <Text className="text-white text-center font-bold text-lg">
+                Iniciar Sesión
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          // REGISTER FORM
+          <View>
+            <View className="mb-4">
+              <Text className="text-sm font-bold text-gray-700 mb-2">Nombre</Text>
+              <TextInput
+                value={name}
+                onChangeText={setName}
+                placeholder="Tu nombre"
+                className="w-full px-4 py-3 bg-blue-50 rounded-xl border-2 border-blue-300"
+              />
+            </View>
 
-        {/* Texto inferior con enlace (falso por ahora) */}
-        <Text className="text-center text-gray-700 mt-5 text-sm">
-          ¿No tienes cuenta?{' '}
-          <Text className="text-blue-600 font-semibold">Regístrate</Text>
-        </Text>
+            <View className="mb-4">
+              <Text className="text-sm font-bold text-gray-700 mb-2">Email</Text>
+              <TextInput
+                value={email}
+                onChangeText={setEmail}
+                placeholder="tu@email.com"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                className="w-full px-4 py-3 bg-blue-50 rounded-xl border-2 border-blue-300"
+              />
+            </View>
+
+            <View className="mb-4">
+              <Text className="text-sm font-bold text-gray-700 mb-2">Contraseña</Text>
+              <TextInput
+                value={password}
+                onChangeText={setPassword}
+                placeholder="••••••••"
+                secureTextEntry
+                className="w-full px-4 py-3 bg-blue-50 rounded-xl border-2 border-blue-300"
+              />
+            </View>
+
+            <View className="mb-6">
+              <Text className="text-sm font-bold text-gray-700 mb-2">Confirmar</Text>
+              <TextInput
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                placeholder="••••••••"
+                secureTextEntry
+                className="w-full px-4 py-3 bg-blue-50 rounded-xl border-2 border-blue-300"
+              />
+            </View>
+
+            <TouchableOpacity
+              onPress={handleRegister}
+              className="w-full bg-blue-500 py-4 rounded-xl"
+            >
+              <Text className="text-white text-center font-bold text-lg">
+                Registrarse
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     </View>
   );
-};
-
-// Exporta el componente para usarlo en otras pantallas
-export default LoginScreen;
+}
