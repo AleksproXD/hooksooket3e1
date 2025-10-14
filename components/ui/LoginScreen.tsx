@@ -7,7 +7,6 @@ const LoginScreen = () => {
   // Estados locales para almacenar el usuario y la contraseña
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-
   return (
     // Contenedor principal que centra todo el contenido en la pantalla
     <View className="flex-1 justify-center items-center px-5">
