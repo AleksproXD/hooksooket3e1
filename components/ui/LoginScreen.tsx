@@ -19,7 +19,7 @@ export default function LoginScreen() {
     }
     
     if (login(email, password)) {
-      router.replace('/home');
+      router.replace('/(tabs)/home');
     } else {
       Alert.alert('Error', 'Credenciales incorrectas');
     }

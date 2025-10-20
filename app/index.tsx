@@ -6,7 +6,7 @@ import "../global.css";
 
 export default function Index() {
   return (
-    <View className="flex-1 w-screen h-screen">
+    <View className="flex-1">
       <FondoI />
       <LoginScreen />
     </View>
